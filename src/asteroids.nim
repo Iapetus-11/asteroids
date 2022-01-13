@@ -11,6 +11,7 @@ type
     mov: PVec2
     rot: Pfloat
     rotMov: Pfloat
+    bulletCooldown: int
 
   Bullet = ref object
     pos: PVec2 # the front of the bullet
@@ -25,8 +26,8 @@ type
 const
   WINDOW_X = 512
   WINDOW_Y = 512
+
   FPS = 30
-  SPF = 1 / FPS
 
 proc vec2(x: Pfloat, y: PFloat): PVec2 =
   return PVec2(x: x, y: y)
@@ -54,7 +55,7 @@ proc rot(p: PVec2, deg: Pfloat): PVec2 =
   return vec2(p.x * cos(rad) - p.y * sin(rad), p.x * sin(rad) + p.y * cos(rad))
 
 proc newShip(): Ship =
-  return Ship(pos: vec2(0.0, 0.0), mov: vec2(0.0, 0.0), rot: 0.0)
+  return Ship(pos: vec2(0.0, 0.0), mov: vec2(0.0, 0.0), rot: 0.0, bulletCooldown: 0)
 
 proc newBullet(ship: Ship): Bullet =
   return Bullet(
@@ -66,9 +67,36 @@ proc newBullet(ship: Ship): Bullet =
 var
   ship: Ship
   bullets: seq[Bullet]
-  bulletCooldown = 0
 
 proc updateShip() =
+  if key(KeyCode.K_LEFT):
+    if ship.rotMov > -20:
+      ship.rotMov -= 10
+  
+  if key(KeyCode.K_RIGHT):
+    if ship.rotMov < 20:
+      ship.rotMov += 10
+
+  if key(KeyCode.K_UP):
+    let f = rot(vec2(0, 3), ship.rot)
+
+    ship.mov.x += f.x
+    ship.mov.y += f.y
+    
+  if key(KeyCode.K_DOWN):
+    let f = rot(vec2(0, -3), ship.rot)
+
+    ship.mov.x += f.x
+    ship.mov.y += f.y
+
+  if key(KeyCode.K_SPACE):
+    if ship.bulletCooldown < 1:
+      bullets.add(newBullet(ship))
+      ship.bulletCooldown += 15
+
+  if ship.bulletCooldown > -30:  # allows ships to build up a burst of bullets
+    ship.bulletCooldown -= 1
+
   ship.rot += ship.rotMov
   
   if ship.rotMov.abs < 0.15:
@@ -114,8 +142,6 @@ proc gameInit() =
 
   bullets.setLen(0)
 
-  bulletCooldown = 0
-
   setPalette(loadPaletteCGA())
 
 proc gameUpdate(dt: float32) =
@@ -125,39 +151,8 @@ proc gameUpdate(dt: float32) =
   if key(KeyCode.K_R):
     gameInit()
 
-  if key(KeyCode.K_LEFT):
-    if ship.rotMov > -20:
-      ship.rotMov -= 10
-  
-  if key(KeyCode.K_RIGHT):
-    if ship.rotMov < 20:
-      ship.rotMov += 10
-
-  if key(KeyCode.K_UP):
-    let f = rot(vec2(0, 3), ship.rot)
-
-    ship.mov.x += f.x
-    ship.mov.y += f.y
-    
-  if key(KeyCode.K_DOWN):
-    let f = rot(vec2(0, -3), ship.rot)
-
-    ship.mov.x += f.x
-    ship.mov.y += f.y
-
-  if key(KeyCode.K_SPACE):
-    if bulletCooldown < 1:
-      bullets.add(newBullet(ship))
-      bulletCooldown += 15
-
   updateShip()
   updateBullets()
-
-  if bulletCooldown > -30:  # allows ships to build up a burst of bullets
-    bulletCooldown -= 1
-
-  # limit framerate
-  sleep(((SPF - dt) * 1000).int)
     
 proc gameDraw() =
   cls()
@@ -180,6 +175,7 @@ proc gameDraw() =
   # # draw asteroids
   # setColor()
 
+nico.timeStep = 1 / FPS
 nico.init("me.iapetus11", "asteroids")
 nico.createWindow("Asteroids", WINDOW_X, WINDOW_Y, 1, false)
 nico.run(gameInit, gameUpdate, gameDraw)
