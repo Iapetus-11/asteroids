@@ -1,6 +1,5 @@
+import std/[math, os, sets, hashes, sequtils]
 import nico
-import math
-import os
 
 type
   PVec2 = ref object
@@ -33,6 +32,9 @@ proc `$`(p: PVec2): string =
 proc `$`(b: Bullet): string =
   return "Bullet<" & $b.pos & "," & $b.mov & "," & $b.rot & ">"
 
+proc hash(b: Bullet): Hash =
+  return hash($b)
+
 proc `+`(a: PVec2, b: PVec2): PVec2 =
   return vec2(a.x + b.x, a.y + b.y)
 
@@ -58,50 +60,8 @@ proc newBullet(ship: Ship): Bullet =
 var
   ship = newShip()
   bullets: seq[Bullet]
-  frameCounter = 0
 
-proc gameInit() =
-  ship.pos.x = WINDOW_X / 2
-  ship.pos.y = WINDOW_Y / 2
-  ship.rot = 0
-
-  setPalette(loadPaletteCGA())
-
-proc gameUpdate(dt: float32) =
-  var
-    movInput = false
-
-  if key(KeyCode.K_LEFT):
-    if ship.rotMov > -20:
-      ship.rotMov -= 10
-
-    movInput = true
-  
-  if key(KeyCode.K_RIGHT):
-    if ship.rotMov < 20:
-      ship.rotMov += 10
-
-    movInput = true
-
-  if key(KeyCode.K_UP):
-    let f = rot(vec2(0, 3), ship.rot)
-
-    ship.mov.x += f.x
-    ship.mov.y += f.y
-
-    movInput = true
-    
-  if key(KeyCode.K_DOWN):
-    let f = rot(vec2(0, -3), ship.rot)
-
-    ship.mov.x += f.x
-    ship.mov.y += f.y
-
-    movInput = true
-
-  if key(KeyCode.K_SPACE):
-    bullets.add(newBullet(ship))
-
+proc updateShip() =
   ship.rot += ship.rotMov
   
   if ship.rotMov.abs < 0.15:
@@ -112,12 +72,64 @@ proc gameUpdate(dt: float32) =
   ship.mov.x = min(ship.mov.x.abs, 8).copySign(ship.mov.x)
   ship.mov.y = min(ship.mov.y.abs, 8).copySign(ship.mov.y)
 
+  if ship.pos.x + ship.mov.x < 0 or ship.pos.x + ship.mov.x > WINDOW_X:
+    ship.mov.x = 0
+  
+  if ship.pos.y + ship.mov.y < 0 or ship.pos.y + ship.mov.y > WINDOW_Y:
+    ship.mov.y = 0
+
   ship.pos.x += ship.mov.x
   ship.pos.y += ship.mov.y
 
-  for b in bullets:
-    b.pos += b.mov
+proc updateBullets() =
+  if bullets.len == 0:
+    return
 
+  var newBullets = bullets.toHashSet
+
+  for b in bullets:
+    if b.pos.x < 0 or b.pos.x > WINDOW_X or b.pos.y < 0 or b.pos.y > WINDOW_Y:
+      newBullets.excl(b)
+    else:
+      b.pos += b.mov
+
+  bullets = newBullets.toSeq
+
+proc gameInit() =
+  ship.pos.x = WINDOW_X / 2
+  ship.pos.y = WINDOW_Y / 2
+  ship.rot = 0
+
+  setPalette(loadPaletteCGA())
+
+proc gameUpdate(dt: float32) =
+  if key(KeyCode.K_LEFT):
+    if ship.rotMov > -20:
+      ship.rotMov -= 10
+  
+  if key(KeyCode.K_RIGHT):
+    if ship.rotMov < 20:
+      ship.rotMov += 10
+
+  if key(KeyCode.K_UP):
+    let f = rot(vec2(0, 3), ship.rot)
+
+    ship.mov.x += f.x
+    ship.mov.y += f.y
+    
+  if key(KeyCode.K_DOWN):
+    let f = rot(vec2(0, -3), ship.rot)
+
+    ship.mov.x += f.x
+    ship.mov.y += f.y
+
+  if key(KeyCode.K_SPACE):
+    bullets.add(newBullet(ship))
+
+  updateShip()
+  updateBullets()
+
+  # limit framerate
   sleep((SPF - dt).int)
     
 proc gameDraw() =
