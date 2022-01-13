@@ -1,4 +1,4 @@
-import std/[math, os, sets, hashes, sequtils]
+import std/[math, os]
 import nico
 
 type
@@ -17,6 +17,11 @@ type
     mov: PVec2
     rot: Pfloat
 
+  Asteroid = ref object
+    pos: PVec2
+    mov: PVec2
+    rot: Pfloat
+
 const
   WINDOW_X = 512
   WINDOW_Y = 512
@@ -32,15 +37,16 @@ proc `$`(p: PVec2): string =
 proc `$`(b: Bullet): string =
   return "Bullet<" & $b.pos & "," & $b.mov & "," & $b.rot & ">"
 
-proc hash(b: Bullet): Hash =
-  return hash($b)
-
 proc `+`(a: PVec2, b: PVec2): PVec2 =
   return vec2(a.x + b.x, a.y + b.y)
 
 proc `+=`(a: PVec2, b: PVec2) =
   a.x += b.x
   a.y += b.y
+
+proc `/=`(a: PVec2, b: Pfloat) =
+  a.x = a.x / b
+  a.y = a.y / b
 
 proc rot(p: PVec2, deg: Pfloat): PVec2 =
   let rad = degToRad(deg)
@@ -58,8 +64,9 @@ proc newBullet(ship: Ship): Bullet =
   )
 
 var
-  ship = newShip()
+  ship: Ship
   bullets: seq[Bullet]
+  bulletCooldown = 0
 
 proc updateShip() =
   ship.rot += ship.rotMov
@@ -72,37 +79,52 @@ proc updateShip() =
   ship.mov.x = min(ship.mov.x.abs, 8).copySign(ship.mov.x)
   ship.mov.y = min(ship.mov.y.abs, 8).copySign(ship.mov.y)
 
-  if ship.pos.x + ship.mov.x < 0 or ship.pos.x + ship.mov.x > WINDOW_X:
-    ship.mov.x = 0
-  
-  if ship.pos.y + ship.mov.y < 0 or ship.pos.y + ship.mov.y > WINDOW_Y:
-    ship.mov.y = 0
+  if ship.pos.x + ship.mov.x < 0:
+    ship.pos.x = WINDOW_X
+  elif ship.pos.x + ship.mov.x > WINDOW_X:
+    ship.pos.x = 0
+
+  if ship.pos.y + ship.mov.y < 0:
+    ship.pos.y = WINDOW_Y
+  elif ship.pos.y + ship.mov.y > WINDOW_Y:
+    ship.pos.y = 0
 
   ship.pos.x += ship.mov.x
   ship.pos.y += ship.mov.y
+
+  ship.mov /= 1.05
 
 proc updateBullets() =
   if bullets.len == 0:
     return
 
-  var newBullets = bullets.toHashSet
+  var newBullets: seq[Bullet]
 
   for b in bullets:
-    if b.pos.x < 0 or b.pos.x > WINDOW_X or b.pos.y < 0 or b.pos.y > WINDOW_Y:
-      newBullets.excl(b)
-    else:
+    if not (b.pos.x < 0 or b.pos.x > WINDOW_X or b.pos.y < 0 or b.pos.y > WINDOW_Y):
       b.pos += b.mov
+      newBullets.add(b)
 
-  bullets = newBullets.toSeq
+  bullets = newBullets
 
 proc gameInit() =
+  ship = newShip()
   ship.pos.x = WINDOW_X / 2
   ship.pos.y = WINDOW_Y / 2
-  ship.rot = 0
+
+  bullets.setLen(0)
+
+  bulletCooldown = 0
 
   setPalette(loadPaletteCGA())
 
 proc gameUpdate(dt: float32) =
+  if key(KeyCode.K_ESCAPE):
+    nico.shutdown()
+  
+  if key(KeyCode.K_R):
+    gameInit()
+
   if key(KeyCode.K_LEFT):
     if ship.rotMov > -20:
       ship.rotMov -= 10
@@ -124,13 +146,18 @@ proc gameUpdate(dt: float32) =
     ship.mov.y += f.y
 
   if key(KeyCode.K_SPACE):
-    bullets.add(newBullet(ship))
+    if bulletCooldown < 1:
+      bullets.add(newBullet(ship))
+      bulletCooldown += 15
 
   updateShip()
   updateBullets()
 
+  if bulletCooldown > -30:  # allows ships to build up a burst of bullets
+    bulletCooldown -= 1
+
   # limit framerate
-  sleep((SPF - dt).int)
+  sleep(((SPF - dt) * 1000).int)
     
 proc gameDraw() =
   cls()
@@ -141,14 +168,17 @@ proc gameDraw() =
     c = rot(vec2(5, -5), ship.rot) + ship.pos
   
   # draw ship
-  setColor(3) # white
+  setColor(3)
   trifill(a.x, a.y, b.x, b.y, c.x, c.y)
 
   # draw bullets
-  setColor(1) # cyan
+  setColor(1) # cya
   for b in bullets:
     let o = rot(vec2(0, -5), b.rot) + b.pos
     line(o.x, o.y, b.pos.x, b.pos.y)
+
+  # # draw asteroids
+  # setColor()
 
 nico.init("me.iapetus11", "asteroids")
 nico.createWindow("Asteroids", WINDOW_X, WINDOW_Y, 1, false)
