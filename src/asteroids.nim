@@ -1,4 +1,4 @@
-import std/[math, os]
+import std/[math]
 import nico
 
 type
@@ -7,11 +7,11 @@ type
     y: PFloat
 
   Ship = ref object
-    pos: PVec2
+    pos: PVec2  # center of ship
     mov: PVec2
     rot: Pfloat
     rotMov: Pfloat
-    bulletCooldown: int
+    bulletCooldown: Pint
 
   Bullet = ref object
     pos: PVec2 # the front of the bullet
@@ -22,6 +22,7 @@ type
     pos: PVec2
     mov: PVec2
     rot: Pfloat
+    radius: PFloat
 
 const
   WINDOW_X = 512
@@ -67,6 +68,7 @@ proc newBullet(ship: Ship): Bullet =
 var
   ship: Ship
   bullets: seq[Bullet]
+  asteroids: seq[Asteroid]
 
 proc updateShip() =
   if key(KeyCode.K_LEFT):
@@ -167,13 +169,15 @@ proc gameDraw() =
   trifill(a.x, a.y, b.x, b.y, c.x, c.y)
 
   # draw bullets
-  setColor(1) # cya
+  setColor(1) # cyan
   for b in bullets:
     let o = rot(vec2(0, -5), b.rot) + b.pos
     line(o.x, o.y, b.pos.x, b.pos.y)
 
-  # # draw asteroids
-  # setColor()
+  # draw asteroids
+  setColor(3)
+  for a in asteroids:
+    circ(a.pos.x, a.pos.y, a.radius)
 
 nico.timeStep = 1 / FPS
 nico.init("me.iapetus11", "asteroids")
