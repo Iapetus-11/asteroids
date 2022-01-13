@@ -1,3 +1,7 @@
 *.exe
 *.dll
 tmp/
+asteroids.data
+asteroids.html
+asteroids.js
+asteroids.wasm
