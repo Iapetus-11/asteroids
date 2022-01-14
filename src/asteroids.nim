@@ -220,8 +220,8 @@ proc updateProjectiles() =
           for i in 0 .. (rnd(1) + 1):
             let newA = newAsteroid(10)
 
-            newA.pos = a.pos + vec2(rnd(40), rnd(40))
-            newA.mov = (b.mov / 10) + a.mov + vec2(i, 0)
+            newA.pos = a.pos + vec2(rnd(35), rnd(35))
+            newA.mov = (b.mov / 9) + a.mov + vec2(i, 0)
 
             newAsteroids.incl(newA)
 
