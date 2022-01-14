@@ -28,6 +28,9 @@ type
     mov: PVec2
     rot: Pfloat
 
+  ControlMode = enum
+    Keyboard, Controller
+
 const
   WINDOW_X = 512
   WINDOW_Y = 512
@@ -119,8 +122,21 @@ var
   bullets: seq[Bullet]
   asteroids: seq[Asteroid]
   score: int
+  controlMode = ControlMode.Keyboard
 
-proc updateShip() =
+proc gameInit() =
+  ship = newShip()
+  ship.pos.x = WINDOW_X / 2
+  ship.pos.y = WINDOW_Y / 2
+
+  bullets.setLen(0)
+  asteroids.setLen(0)
+
+  score = 0
+
+  setPalette(CGA)
+
+proc keyboardControls() =
   if key(KeyCode.K_LEFT):
     if ship.rotMov > -15:
       ship.rotMov -= 6.5
@@ -140,6 +156,25 @@ proc updateShip() =
       bullets.add(newBullet(ship))
       ship.bulletCooldown += 10
 
+  if key(KeyCode.K_ESCAPE):
+    nico.shutdown()
+  
+  if key(KeyCode.K_R):
+    gameInit()
+
+proc joystickControls() =
+  ship.rotMov = jaxis(NicoAxis.pcXAxis2) * 15
+  ship.mov += rot(vec2(0, jaxis(NicoAxis.pcYAxis) * 2), ship.rot)
+
+  if jaxis(NicoAxis.pcRTrigger) > 0:
+    if ship.bulletCooldown < 1:
+      bullets.add(newBullet(ship))
+      ship.bulletCooldown += 10
+
+  if btn(NicoButton.pcStart):
+    gameInit()
+
+proc updateShip() =
   if ship.bulletCooldown > 0:
     ship.bulletCooldown -= 1
 
@@ -213,21 +248,21 @@ proc updateProjectiles() =
   bullets = newBullets.toSeq
   asteroids = newAsteroids.toSeq
 
-proc gameInit() =
-  ship = newShip()
-  ship.pos.x = WINDOW_X / 2
-  ship.pos.y = WINDOW_Y / 2
-
-  bullets.setLen(0)
-
-  setPalette(CGA)
-
 proc gameUpdate(dt: float32) =
-  if key(KeyCode.K_ESCAPE):
-    nico.shutdown()
+  if anykeyp():
+    controlMode = ControlMode.Keyboard
   
-  if key(KeyCode.K_R):
-    gameInit()
+  if (
+    jaxis(NicoAxis.pcXAxis) != 0 or
+    jaxis(NicoAxis.pcYAxis) != 0 or
+    jaxis(NicoAxis.pcXAxis2) != 0 or
+    jaxis(NicoAxis.pcYAxis2) != 0
+  ):
+    controlMode = ControlMode.Controller
+
+  case controlMode:
+  of ControlMode.Keyboard: keyboardControls()
+  of ControlMode.Controller: joystickControls()
 
   updateShip()
   updateProjectiles()
