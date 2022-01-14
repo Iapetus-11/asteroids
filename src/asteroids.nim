@@ -209,6 +209,7 @@ proc updateProjectiles() =
   for a in asteroids:
     if a.contains(ship.pos):
       newAsteroids.excl(a)
+      score = (score / 2).int - 10
       continue
 
     var doContinue = false
