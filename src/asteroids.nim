@@ -164,7 +164,7 @@ proc keyboardControls() =
 
 proc joystickControls() =
   ship.rotMov = jaxis(NicoAxis.pcXAxis2) * 15
-  ship.mov += rot(vec2(0, jaxis(NicoAxis.pcYAxis) * 2), ship.rot)
+  ship.mov += rot(vec2(0, jaxis(NicoAxis.pcYAxis) * -2), ship.rot)
 
   if jaxis(NicoAxis.pcRTrigger) > 0:
     if ship.bulletCooldown < 1:
