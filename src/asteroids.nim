@@ -47,7 +47,7 @@ proc `$`(b: Bullet): string =
   return "Bullet<" & $b.pos & "," & $b.mov & "," & $b.rot & ">"
 
 proc `$`(a: Asteroid): string =
-  return "Asteroid<" & $a.pos & "," & $a.mov & "," & $a.rot & ">"
+  return "Asteroid<" & $a.pos & "," & $a.mov & "," & $a.rot & "," & $a.radius & ">"
 
 proc hash(b: Bullet): Hash =
   return hash($b)
