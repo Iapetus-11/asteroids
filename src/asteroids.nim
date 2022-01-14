@@ -21,7 +21,7 @@ type
     rot: Pfloat
 
   Circle = ref object of RootObj
-    pos: PVec2
+    pos: PVec2  # center
     radius: PFloat
 
   Asteroid = ref object of Circle
@@ -104,14 +104,14 @@ proc newBullet(ship: Ship): Bullet =
     rot: ship.rot,
   )
 
-proc newAsteroid(): Asteroid =
+proc newAsteroid(radius: int): Asteroid =
   let (pos, mov) = randomAsteroidPosMov()
 
   return Asteroid(
     pos: pos,
     mov: mov,
     rot: 0,
-    radius: 30,
+    radius: radius,
   )
 
 var
@@ -183,6 +183,15 @@ proc updateProjectiles() =
         score += 1
         doContinue = true
 
+        if a.radius == 30:
+          for i in 0..rand(1)+1:
+            let newA = newAsteroid(10)
+
+            newA.pos = a.pos + vec2(rand(40), rand(40))
+            newA.mov = (b.mov / 10) + a.mov + vec2(i, 0)
+
+            newAsteroids.incl(newA)
+
     if doContinue: continue
 
     if (
@@ -224,7 +233,7 @@ proc gameUpdate(dt: float32) =
   updateProjectiles()
 
   if rand(30) == 15:
-    asteroids.add(newAsteroid())
+    asteroids.add(newAsteroid(30))
     
 proc gameDraw() =
   cls()
