@@ -118,12 +118,12 @@ var
 
 proc updateShip() =
   if key(KeyCode.K_LEFT):
-    if ship.rotMov > -20:
-      ship.rotMov -= 10
+    if ship.rotMov > -15:
+      ship.rotMov -= 7
   
   if key(KeyCode.K_RIGHT):
-    if ship.rotMov < 20:
-      ship.rotMov += 10
+    if ship.rotMov < 15:
+      ship.rotMov += 7
 
   if key(KeyCode.K_UP):
     let f = rot(vec2(0, 3), ship.rot)
