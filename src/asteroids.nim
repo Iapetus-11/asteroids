@@ -207,6 +207,10 @@ proc updateProjectiles() =
     newAsteroids = asteroids.toHashSet
 
   for a in asteroids:
+    if a.contains(ship.pos):
+      newAsteroids.excl(a)
+      continue
+
     var doContinue = false
 
     for b in bullets:
