@@ -79,15 +79,19 @@ proc contains(c: Circle, p: PVec2): bool =
   return pow((p.x - c.pos.x), 2) + pow((p.y - c.pos.y), 2) < pow(c.radius, 2)
 
 proc randomAsteroidPosMov(): tuple[pos: PVec2, mov: PVec2] =
+  let
+    angle = rand(30)
+    mov = rand(3) + 1
+
   case rand(3):
   of 0: # left
-    return (vec2(0, rand(WINDOW_Y)), rot(vec2(5, 0), rand(30)))
+    return (vec2(0, rand(WINDOW_Y)), rot(vec2(mov, 0), angle))
   of 1: # right
-    return (vec2(WINDOW_X, rand(WINDOW_Y)), rot(vec2(-5, 0), rand(30)))
+    return (vec2(WINDOW_X, rand(WINDOW_Y)), rot(vec2(-mov, 0), angle))
   of 2: # top
-    return (vec2(rand(WINDOW_X), 0), rot(vec2(0, 5), rand(30)))
+    return (vec2(rand(WINDOW_X), 0), rot(vec2(0, mov), angle))
   of 3: # bottom
-    return (vec2(rand(WINDOW_X), WINDOW_Y), rot(vec2(0, -5), rand(30)))
+    return (vec2(rand(WINDOW_X), WINDOW_Y), rot(vec2(0, -mov), angle))
   else: raise newException(ValueError, "impossible!")
 
 proc newShip(): Ship =
