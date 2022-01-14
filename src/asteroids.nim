@@ -81,10 +81,10 @@ proc contains(c: Circle, p: PVec2): bool =
 
 proc randomAsteroidPosMov(): tuple[pos: PVec2, mov: PVec2] =
   let
-    angle = rnd(30)
-    mov = rnd(3) + 1
+    angle = rnd(31)
+    mov = rnd(4) + 1
 
-  case rnd(3):
+  case rnd(4):
   of 0: # left
     return (vec2(0, rnd(WINDOW_Y)), rot(vec2(mov, 0), angle))
   of 1: # right
@@ -222,10 +222,10 @@ proc updateProjectiles() =
         doContinue = true
 
         if a.radius == 30:
-          for i in 0 .. (rnd(1) + 1):
+          for i in 0 .. (rnd(2) + 1):
             let newA = newAsteroid(10)
 
-            newA.pos = a.pos + vec2(rnd(35), rnd(35))
+            newA.pos = a.pos + vec2(rnd(36), rnd(36))
             newA.mov = (b.mov / 9) + a.mov + vec2(i, 0)
 
             newAsteroids.incl(newA)
