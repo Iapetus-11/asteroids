@@ -115,6 +115,19 @@ proc newAsteroid(radius: int): Asteroid =
     radius: radius,
   )
 
+proc newAsteroidChild(a: Asteroid, b: Bullet, v: int): Asteroid =
+  var radius = -1
+
+  if a.radius == 30:
+    radius = (rnd(2) + 1) * 10
+  else:
+    radius = 10
+
+  result = newAsteroid(radius)
+
+  result.pos = a.pos + vec2(rnd(36), rnd(36))
+  result.mov = (b.mov / 10) + a.mov + vec2(v, 0)
+
 var
   ship: Ship
   bullets: seq[Bullet]
@@ -223,12 +236,9 @@ proc updateProjectiles() =
 
         if a.radius == 30:
           for i in 0 .. (rnd(2) + 1):
-            let newA = newAsteroid(10)
-
-            newA.pos = a.pos + vec2(rnd(36), rnd(36))
-            newA.mov = (b.mov / 9) + a.mov + vec2(i, 0)
-
-            newAsteroids.incl(newA)
+            newAsteroids.incl(newAsteroidChild(a, b, i))
+        elif a.radius == 20:
+            newAsteroids.incl(newAsteroidChild(a, b, 1))
 
     if doContinue: continue
 
