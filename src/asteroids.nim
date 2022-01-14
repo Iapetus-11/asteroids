@@ -123,23 +123,17 @@ var
 proc updateShip() =
   if key(KeyCode.K_LEFT):
     if ship.rotMov > -15:
-      ship.rotMov -= 7
+      ship.rotMov -= 6.5
   
   if key(KeyCode.K_RIGHT):
     if ship.rotMov < 15:
-      ship.rotMov += 7
+      ship.rotMov += 6.5
 
   if key(KeyCode.K_UP):
-    let f = rot(vec2(0, 3), ship.rot)
-
-    ship.mov.x += f.x
-    ship.mov.y += f.y
+    ship.mov += rot(vec2(0, 2), ship.rot)
     
   if key(KeyCode.K_DOWN):
-    let f = rot(vec2(0, -3), ship.rot)
-
-    ship.mov.x += f.x
-    ship.mov.y += f.y
+    ship.mov += rot(vec2(0, -2), ship.rot)
 
   if key(KeyCode.K_SPACE):
     if ship.bulletCooldown < 1:
@@ -156,8 +150,8 @@ proc updateShip() =
   else:
     ship.rotMov = ship.rotMov / 2.5
 
-  ship.mov.x = min(ship.mov.x.abs, 8).copySign(ship.mov.x)
-  ship.mov.y = min(ship.mov.y.abs, 8).copySign(ship.mov.y)
+  ship.mov.x = min(ship.mov.x.abs, 6).copySign(ship.mov.x)
+  ship.mov.y = min(ship.mov.y.abs, 6).copySign(ship.mov.y)
 
   if ship.pos.x + ship.mov.x < 0:
     ship.pos.x = WINDOW_X
@@ -172,7 +166,7 @@ proc updateShip() =
   ship.pos.x += ship.mov.x
   ship.pos.y += ship.mov.y
 
-  ship.mov /= 1.05
+  ship.mov /= 1.1
 
 proc updateProjectiles() =
   var
@@ -182,7 +176,7 @@ proc updateProjectiles() =
   for a in asteroids:
     var doContinue = false
 
-    for b in newBullets:
+    for b in bullets:
       if a.contains(b.pos):
         newBullets.excl(b)
         newAsteroids.excl(a)
@@ -201,7 +195,7 @@ proc updateProjectiles() =
     else:
       newAsteroids.excl(a)
   
-  for b in newBullets:
+  for b in bullets:
     if (b.pos.x < 0 or b.pos.x > WINDOW_X or b.pos.y < 0 or b.pos.y > WINDOW_Y):
       newBullets.excl(b)
     else:
