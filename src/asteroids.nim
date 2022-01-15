@@ -185,6 +185,24 @@ proc joystickControls() =
   if btn(NicoButton.pcStart):
     gameInit()
 
+# proc joystickControls2() =
+#   let
+#     jAX2 = jaxis(NicoAxis.pcXAxis2)
+#     jAY2 = jaxis(NicoAxis.pcYAxis2)
+
+#   if (jAX2 != 0 or jAY2 != 0):
+#     ship.rot = radToDeg(arctan2(jAY2.float64, jAX2.float64))
+
+#   ship.mov += vec2(jaxis(NicoAxis.pcXAxis) * 2, jaxis(NicoAxis.pcYAxis) * 2)
+
+#   if jaxis(NicoAxis.pcRTrigger) > 0:
+#     if ship.bulletCooldown < 1:
+#       bullets.add(newBullet(ship))
+#       ship.bulletCooldown += 10
+
+#   if btn(NicoButton.pcStart):
+#     gameInit()
+
 proc updateShip() =
   if ship.bulletCooldown > 0:
     ship.bulletCooldown -= 1
@@ -264,8 +282,7 @@ proc updateProjectiles() =
 proc gameUpdate(dt: float32) =
   if anykeyp():
     controlMode = ControlMode.Keyboard
-  
-  if (
+  elif (
     jaxis(NicoAxis.pcXAxis) != 0 or
     jaxis(NicoAxis.pcYAxis) != 0 or
     jaxis(NicoAxis.pcXAxis2) != 0 or
