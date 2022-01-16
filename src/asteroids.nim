@@ -26,9 +26,6 @@ type
     mov: PVec2
     rot: Pfloat
 
-  ControlMode = enum
-    Keyboard, Controller
-
 const
   WINDOW_X = 512
   WINDOW_Y = 512
@@ -133,7 +130,6 @@ var
   bullets: seq[Bullet]
   asteroids: seq[Asteroid]
   score: int
-  controlMode = ControlMode.Keyboard
 
 proc gameInit() =
   ship = newShip()
@@ -165,7 +161,7 @@ proc keyboardControls() =
   if key(KeyCode.K_SPACE):
     if ship.bulletCooldown < 1:
       bullets.add(newBullet(ship))
-      ship.bulletCooldown += 10
+      ship.bulletCooldown += 6
 
   if key(KeyCode.K_ESCAPE):
     nico.shutdown()
@@ -241,7 +237,6 @@ proc updateProjectiles() =
     if a.contains(ship.pos):
       newAsteroids.excl(a)
       score = (score / 2).int - 10
-      continue
 
     var doContinue = false
 
@@ -249,6 +244,7 @@ proc updateProjectiles() =
       if a.contains(b.pos):
         newBullets.excl(b)
         newAsteroids.excl(a)
+
         score += 1
         doContinue = true
 
@@ -260,11 +256,13 @@ proc updateProjectiles() =
 
     if doContinue: continue
 
+    let r2 = a.radius * 2
+
     if (
-      a.pos.x + a.radius > 0 or
-      a.pos.x + a.radius < WINDOW_X or
-      a.pos.y + a.radius > 0 or
-      a.pos.y + a.radius < WINDOW_Y
+      a.pos.x + r2 > 0 and
+      a.pos.x - r2 < WINDOW_X and
+      a.pos.y + r2 > 0 and
+      a.pos.y - r2 < WINDOW_Y
     ):
       a.pos += a.mov
     else:
@@ -281,18 +279,14 @@ proc updateProjectiles() =
 
 proc gameUpdate(dt: float32) =
   if anykeyp():
-    controlMode = ControlMode.Keyboard
+    keyboardControls()
   elif (
     jaxis(NicoAxis.pcXAxis) != 0 or
     jaxis(NicoAxis.pcYAxis) != 0 or
     jaxis(NicoAxis.pcXAxis2) != 0 or
     jaxis(NicoAxis.pcYAxis2) != 0
   ):
-    controlMode = ControlMode.Controller
-
-  case controlMode:
-  of ControlMode.Keyboard: keyboardControls()
-  of ControlMode.Controller: joystickControls()
+    joystickControls()
 
   updateShip()
   updateProjectiles()
@@ -304,7 +298,7 @@ proc gameDraw() =
   cls()
   
   setColor(3)
-  print("SCORE: " & $score, 4, 4, 4)
+  print("SCORE: " & $score, 4, 4, 3)
 
   let
     a = rot(vec2(0, 10), ship.rot) + ship.pos
