@@ -26,6 +26,9 @@ type
     mov: PVec2
     rot: Pfloat
 
+  GameState = enum
+    ControlsHelp, Running
+
 const
   WINDOW_X = 512
   WINDOW_Y = 512
@@ -130,6 +133,7 @@ var
   bullets: seq[Bullet]
   asteroids: seq[Asteroid]
   score: int
+  gameState = GameState.ControlsHelp
 
 proc gameInit() =
   ship = newShip()
@@ -180,24 +184,6 @@ proc joystickControls() =
 
   if btn(NicoButton.pcStart):
     gameInit()
-
-# proc joystickControls2() =
-#   let
-#     jAX2 = jaxis(NicoAxis.pcXAxis2)
-#     jAY2 = jaxis(NicoAxis.pcYAxis2)
-
-#   if (jAX2 != 0 or jAY2 != 0):
-#     ship.rot = radToDeg(arctan2(jAY2.float64, jAX2.float64))
-
-#   ship.mov += vec2(jaxis(NicoAxis.pcXAxis) * 2, jaxis(NicoAxis.pcYAxis) * 2)
-
-#   if jaxis(NicoAxis.pcRTrigger) > 0:
-#     if ship.bulletCooldown < 1:
-#       bullets.add(newBullet(ship))
-#       ship.bulletCooldown += 10
-
-#   if btn(NicoButton.pcStart):
-#     gameInit()
 
 proc updateShip() =
   if ship.bulletCooldown > 0:
@@ -278,47 +264,67 @@ proc updateProjectiles() =
   asteroids = newAsteroids.toSeq
 
 proc gameUpdate(dt: float32) =
-  if anykeyp():
-    keyboardControls()
-  elif (
-    jaxis(NicoAxis.pcXAxis) != 0 or
-    jaxis(NicoAxis.pcYAxis) != 0 or
-    jaxis(NicoAxis.pcXAxis2) != 0 or
-    jaxis(NicoAxis.pcYAxis2) != 0
-  ):
-    joystickControls()
+  case gameState:
+  of ControlsHelp:
+    if anykeyp() or anybtnp():
+      gameState = GameState.Running
+  of Running:
+    if anykeyp():
+      keyboardControls()
+    elif (
+      jaxis(NicoAxis.pcXAxis) != 0 or
+      jaxis(NicoAxis.pcYAxis) != 0 or
+      jaxis(NicoAxis.pcXAxis2) != 0 or
+      jaxis(NicoAxis.pcYAxis2) != 0
+    ):
+      joystickControls()
 
-  updateShip()
-  updateProjectiles()
+    updateShip()
+    updateProjectiles()
 
-  if rnd(30) == 15:
-    asteroids.add(newAsteroid(30))
+    if rnd(30) == 15:
+      asteroids.add(newAsteroid(30))
     
 proc gameDraw() =
   cls()
   
-  setColor(3)
-  print("SCORE: " & $score, 4, 4, 3)
+  case gameState:
+  of GameState.ControlsHelp:
+    setColor(3)
+    printc("ASTEROIDS CLONE BY IAPETUS11", (WINDOW_X / 2).int, 30, 4)
 
-  let
-    a = rot(vec2(0, 10), ship.rot) + ship.pos
-    b = rot(vec2(-5, -5), ship.rot) + ship.pos
-    c = rot(vec2(5, -5), ship.rot) + ship.pos
-  
-  # draw ship
-  setColor(3)
-  trifill(a.x, a.y, b.x, b.y, c.x, c.y)
+    rectfill(20, 67, WINDOW_X - 20, 70)
 
-  # draw bullets
-  setColor(1) # cyan
-  for b in bullets:
-    let o = rot(vec2(0, -5), b.rot) + b.pos
-    line(o.x, o.y, b.pos.x, b.pos.y)
+    printc("SPACE TO SHOOT", (WINDOW_X / 2).int, 90, 4)
+    printc("LEFT / RIGHT ARROWS TURN", (WINDOW_X / 2).int, 120, 4)
+    printc("UP / DOWN ARROWS FOR THRUST", (WINDOW_X / 2).int, 150, 4)
 
-  # draw asteroids
-  setColor(3)
-  for a in asteroids:
-    circ(a.pos.x, a.pos.y, a.radius)
+    rectfill(20, 187, WINDOW_X - 20, 190)
+
+    printc("PRESS ANY KEY TO START!", (WINDOW_X / 2).int, 210, 4)
+  of GameState.Running:
+    setColor(3)
+    print("SCORE: " & $score, 4, 4, 4)
+
+    let
+      a = rot(vec2(0, 10), ship.rot) + ship.pos
+      b = rot(vec2(-5, -5), ship.rot) + ship.pos
+      c = rot(vec2(5, -5), ship.rot) + ship.pos
+    
+    # draw ship
+    setColor(3)
+    trifill(a.x, a.y, b.x, b.y, c.x, c.y)
+
+    # draw bullets
+    setColor(1) # cyan
+    for b in bullets:
+      let o = rot(vec2(0, -5), b.rot) + b.pos
+      line(o.x, o.y, b.pos.x, b.pos.y)
+
+    # draw asteroids
+    setColor(3)
+    for a in asteroids:
+      circ(a.pos.x, a.pos.y, a.radius)
 
 nico.timeStep = 1 / FPS
 nico.init("me.iapetus11", "asteroids")
