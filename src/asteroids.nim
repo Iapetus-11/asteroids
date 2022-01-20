@@ -37,6 +37,8 @@ const
 
   CGA = loadPaletteCGA()
 
+  BULLET_COOLDOWN = 7
+
 proc vec2(x: Pfloat, y: PFloat): PVec2 =
   return PVec2(x: x, y: y)
 
@@ -125,7 +127,7 @@ proc newAsteroidChild(a: Asteroid, b: Bullet, v: int): Asteroid =
 
   result = newAsteroid(radius)
 
-  result.pos = a.pos + vec2(rnd(36), rnd(36))
+  result.pos = a.pos + vec2(rnd(10)-5, rnd(10)-5)
   result.mov = (b.mov / 10) + a.mov + vec2(v, 0)
 
 var
@@ -165,7 +167,7 @@ proc keyboardControls() =
   if key(KeyCode.K_SPACE):
     if ship.bulletCooldown < 1:
       bullets.add(newBullet(ship))
-      ship.bulletCooldown += 6
+      ship.bulletCooldown += BULLET_COOLDOWN
 
   if key(KeyCode.K_ESCAPE):
     nico.shutdown()
@@ -180,7 +182,7 @@ proc joystickControls() =
   if jaxis(NicoAxis.pcRTrigger) > 0:
     if ship.bulletCooldown < 1:
       bullets.add(newBullet(ship))
-      ship.bulletCooldown += 10
+      ship.bulletCooldown += BULLET_COOLDOWN
 
   if btn(NicoButton.pcStart):
     gameInit()
