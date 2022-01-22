@@ -1,6 +1,11 @@
 *.exe
 *.dll
+
 tmp/
+android/
+
+android.zip
+
 asteroids.data
 asteroids.html
 asteroids.js
